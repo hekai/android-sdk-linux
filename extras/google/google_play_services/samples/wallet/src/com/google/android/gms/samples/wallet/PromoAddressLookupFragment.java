@@ -60,7 +60,7 @@ public class PromoAddressLookupFragment extends Fragment implements
         }
         String accountName =
                 ((BikestoreApplication) getActivity().getApplication()).getAccountName();
-        AddressOptions options = new AddressOptions(WalletConstants.THEME_HOLO_LIGHT);
+        AddressOptions options = new AddressOptions(WalletConstants.THEME_LIGHT);
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
                 .addApi(Address.API, options)
                 .setAccountName(accountName)

@@ -1,9 +1,12 @@
 package com.google.android.gms.drive.sample.realtimeplayground;
 
 import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.DriveFirstPartyApi;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.drive.OpenFileActivityBuilder;
+import com.google.android.gms.drive.RealtimeDocumentSyncRequest;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -11,7 +14,11 @@ import android.content.IntentSender;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class RealtimePlaygroundHomeActivity extends BaseDriveActivity {
 
@@ -44,6 +51,26 @@ public class RealtimePlaygroundHomeActivity extends BaseDriveActivity {
             }
         });
         mOpenButton.setEnabled(false);
+
+        Button syncButton = (Button) findViewById(R.id.sync_button);
+        syncButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Drive.DriveFirstPartyApi.requestRealtimeDocumentSync(mGoogleApiClient,
+                        Collections.singletonList("0B7D3Rod8ftFBTW1RUUpEUVE0UGM"),
+                        new ArrayList<String>());
+            }
+        });
+
+        Button deleteButton = (Button) findViewById(R.id.delete_button);
+        deleteButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Drive.DriveFirstPartyApi.requestRealtimeDocumentSync(mGoogleApiClient,
+                        new ArrayList<String>(),
+                        Collections.singletonList("0B7D3Rod8ftFBTW1RUUpEUVE0UGM"));
+            }
+        });
     }
 
     @Override

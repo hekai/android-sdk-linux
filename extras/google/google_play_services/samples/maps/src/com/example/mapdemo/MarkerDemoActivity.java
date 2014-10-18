@@ -45,6 +45,7 @@ import android.view.animation.Interpolator;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -71,8 +72,6 @@ public class MarkerDemoActivity extends FragmentActivity
 
     /** Demonstrates customizing the info window and/or its contents. */
     class CustomInfoWindowAdapter implements InfoWindowAdapter {
-        private final RadioGroup mOptions;
-
         // These a both viewgroups containing an ImageView with id "badge" and two TextViews with id
         // "title" and "snippet".
         private final View mWindow;
@@ -81,7 +80,6 @@ public class MarkerDemoActivity extends FragmentActivity
         CustomInfoWindowAdapter() {
             mWindow = getLayoutInflater().inflate(R.layout.custom_info_window, null);
             mContents = getLayoutInflater().inflate(R.layout.custom_info_contents, null);
-            mOptions = (RadioGroup) findViewById(R.id.custom_info_window_options);
         }
 
         @Override
@@ -155,11 +153,18 @@ public class MarkerDemoActivity extends FragmentActivity
     private Marker mAdelaide;
     private Marker mMelbourne;
 
+    /**
+     * Keeps track of the last selected marker (though it may no longer be selected).  This is
+     * useful for refreshing the info window.
+     */
+    private Marker mLastSelectedMarker;
+
     private final List<Marker> mMarkerRainbow = new ArrayList<Marker>();
 
     private TextView mTopText;
     private SeekBar mRotationBar;
     private CheckBox mFlatBox;
+    private RadioGroup mOptions;
 
     private final Random mRandom = new Random();
 
@@ -175,6 +180,17 @@ public class MarkerDemoActivity extends FragmentActivity
         mRotationBar.setOnSeekBarChangeListener(this);
 
         mFlatBox = (CheckBox) findViewById(R.id.flat);
+
+        mOptions = (RadioGroup) findViewById(R.id.custom_info_window_options);
+        mOptions.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+          @Override
+          public void onCheckedChanged(RadioGroup group, int checkedId) {
+            if (mLastSelectedMarker != null && mLastSelectedMarker.isInfoWindowShown()) {
+              // Refresh the info window when the info window's content has changed.
+              mLastSelectedMarker.showInfoWindow();
+            }
+          }
+        });
 
         setUpMapIfNeeded();
     }
@@ -383,6 +399,8 @@ public class MarkerDemoActivity extends FragmentActivity
             marker.setIcon(BitmapDescriptorFactory.defaultMarker(mRandom.nextFloat() * 360));
             marker.setAlpha(mRandom.nextFloat());
         }
+
+        mLastSelectedMarker = marker;
         // We return false to indicate that we have not consumed the event and that we wish
         // for the default behavior to occur (which is for the camera to move such that the
         // marker is centered and for the marker's info window to open, if it has one).

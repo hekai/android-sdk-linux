@@ -53,6 +53,7 @@ public class MrpCastPlayerActivity extends BaseCastPlayerActivity {
     private long mStreamDuration;
     private boolean mStreamAdvancing;
     private ResultBundleHandler mMediaResultHandler;
+    private MediaInfo mPendingMedia;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +145,14 @@ public class MrpCastPlayerActivity extends BaseCastPlayerActivity {
         if (media == null) {
             return;
         }
+
+        if (mSessionId == null) {
+            // Need to start a session first.
+            mPendingMedia = media;
+            startSession();
+            return;
+        }
+
         MediaMetadata metadata = media.getMetadata();
         Log.d(TAG, "Casting " + metadata.getString(MediaMetadata.KEY_TITLE) + " ("
                 + media.getContentType() + ")");
@@ -314,6 +323,8 @@ public class MrpCastPlayerActivity extends BaseCastPlayerActivity {
     }
 
     private void endSession() {
+        mPendingMedia = null;
+
         if (mSessionId == null) {
             return;
         }
@@ -394,7 +405,13 @@ public class MrpCastPlayerActivity extends BaseCastPlayerActivity {
             case MediaSessionStatus.SESSION_STATE_ACTIVE:
                 Log.d(TAG, "session " + sessionId + " is ACTIVE");
                 mSessionActive = true;
-                syncStatus();
+                if (mPendingMedia != null) {
+                    MediaInfo media = mPendingMedia;
+                    mPendingMedia = null;
+                    onPlayMedia(media);
+                } else {
+                    syncStatus();
+                }
                 break;
 
             case MediaSessionStatus.SESSION_STATE_ENDED:

@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -22,7 +23,6 @@ import com.google.android.gms.tagmanager.TagManager;
  * Json file and applies those colors to text view.
  */
 public class MainActivity extends Activity {
-    private static final long TIMEOUT_FOR_CONTAINER_OPEN_MILLISECONDS = 2000;
     private static final String TAG = "GTMExample";
     private static final String CONTAINER_ID = "GTM-XXXX";
     private static final String BACKGROUND_COLOR_KEY = "background-color";
@@ -30,35 +30,21 @@ public class MainActivity extends Activity {
 
     // Set to false for release build.
     private static final Boolean DEVELOPER_BUILD = true;
-    private ContainerHolder containerHolder;
+    private ContainerHolder mContainerHolder = null;
+
+    private void setContainerHolder(ContainerHolder containerHolder) {
+      this.mContainerHolder = containerHolder;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (DEVELOPER_BUILD) {
             StrictMode.enableDefaults();
         }
-        TagManager tagManager = TagManager.getInstance(this);
-
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
-        PendingResult<ContainerHolder> pending =
-                tagManager.loadContainerPreferNonDefault(CONTAINER_ID, R.raw.gtm_xxxx_json);
-
-        // This call may block. For an example that shows how to use a splash
-        // screen to avoid blocking, see cuteanimals example.
-        containerHolder = pending.await(TIMEOUT_FOR_CONTAINER_OPEN_MILLISECONDS,
-                TimeUnit.MILLISECONDS);
-        if (!containerHolder.getStatus().isSuccess()) {
-            Log.e("HelloWorld", "failure loading container");
-            displayErrorToUser(R.string.load_error);
-            return;
-        }
-
-        // Modify the background-color and text-color of text based on the value
-        // from configuration.
-        updateColors();
+        new DownloadContainerTask(this).execute(CONTAINER_ID);
     }
 
     private void updateColors() {
@@ -72,7 +58,11 @@ public class MainActivity extends Activity {
      * Returns an integer representing a color.
      */
     private int getColor(String key) {
-        return colorFromColorName(containerHolder.getContainer().getString(key));
+        String colorName = "";
+        if (mContainerHolder != null) {
+          colorName = mContainerHolder.getContainer().getString(key);
+        }
+        return colorFromColorName(colorName);
     }
 
     /**
@@ -97,10 +87,18 @@ public class MainActivity extends Activity {
         Log.i(TAG, "colorButtonClicked");
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
         alertDialog.setTitle("Getting colors");
-        alertDialog.setMessage(BACKGROUND_COLOR_KEY + " = "
-                + containerHolder.getContainer().getString(BACKGROUND_COLOR_KEY)
-                + " " + TEXT_COLOR_KEY + " = "
-                + containerHolder.getContainer().getString(TEXT_COLOR_KEY));
+        // The container holder might have not been set at this moment. For an example that shows
+        // how to use a splash screen to guarantee that the container holder will be initialized,
+        // see cuteanimals example.
+        if (mContainerHolder != null) {
+          alertDialog.setMessage(BACKGROUND_COLOR_KEY + " = "
+                  + mContainerHolder.getContainer().getString(BACKGROUND_COLOR_KEY)
+                  + " " + TEXT_COLOR_KEY + " = "
+                  + mContainerHolder.getContainer().getString(TEXT_COLOR_KEY));
+        } else {
+          alertDialog.setMessage("The container isn't ready. Using default application values");
+
+        }
         alertDialog.setButton(AlertDialog.BUTTON_POSITIVE,
                 "OK", new DialogInterface.OnClickListener() {
                     @Override
@@ -113,7 +111,9 @@ public class MainActivity extends Activity {
 
     public void refreshButtonClicked(@SuppressWarnings("unused") View view) {
         Log.i(TAG, "refreshButtonClicked");
-        containerHolder.refresh();
+        if (mContainerHolder != null) {
+          mContainerHolder.refresh();
+        }
     }
 
     public int colorFromColorName(String colorName) {
@@ -129,5 +129,45 @@ public class MainActivity extends Activity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
+    }
+
+    // This AsyncTask class will set the Container Holder object once this task is completed.
+    private class DownloadContainerTask extends AsyncTask<String, Void, Boolean> {
+        private static final long TIMEOUT_FOR_CONTAINER_OPEN_MILLISECONDS = 2000;
+        private static final int DEFAULT_CONTAINER_RESOURCE_ID = R.raw.gtm_xxxx_json;
+
+        private Activity mActivity;
+        private ContainerHolder mContainerHolder;
+
+        public DownloadContainerTask(Activity activity) {
+            this.mActivity = activity;
+        }
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            String containerId = params[0];
+
+            TagManager tagManager = TagManager.getInstance(mActivity);
+            PendingResult<ContainerHolder> pending = tagManager.loadContainerPreferNonDefault(
+                    containerId, DEFAULT_CONTAINER_RESOURCE_ID);
+
+            mContainerHolder = pending.await(TIMEOUT_FOR_CONTAINER_OPEN_MILLISECONDS,
+                    TimeUnit.MILLISECONDS);
+            if (!mContainerHolder.getStatus().isSuccess()) {
+                Log.e("HelloWorld", "failure loading container");
+                displayErrorToUser(R.string.load_error);
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            // Set up the containerHolder object.
+            setContainerHolder(mContainerHolder);
+            // Modify the background-color and text-color of text based on the value
+            // from configuration.
+            updateColors();
+        }
     }
 }

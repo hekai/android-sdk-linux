@@ -239,6 +239,8 @@ abstract class BaseCastPlayerActivity extends ActionBarActivity
             mCaptioningManager.addCaptioningChangeListener(mCaptioningListener);
             updateTextTrackStyle(mCaptioningManager.isEnabled());
         }
+
+        buildRouteSelector();
     }
 
     @Override
@@ -334,10 +336,6 @@ abstract class BaseCastPlayerActivity extends ActionBarActivity
     }
 
     private void startDiscovery() {
-        mMediaRouteSelector = new MediaRouteSelector.Builder()
-                .addControlCategory(getControlCategory())
-                .build();
-
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
             MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN);
         mDiscoveryActive = true;
@@ -345,8 +343,13 @@ abstract class BaseCastPlayerActivity extends ActionBarActivity
 
     private void stopDiscovery() {
         mMediaRouter.removeCallback(mMediaRouterCallback);
-        mMediaRouteSelector = null;
         mDiscoveryActive = false;
+    }
+
+    private void buildRouteSelector() {
+        mMediaRouteSelector = new MediaRouteSelector.Builder()
+                .addControlCategory(getControlCategory())
+                .build();
     }
 
     private void selectMedia() {
@@ -640,7 +643,9 @@ abstract class BaseCastPlayerActivity extends ActionBarActivity
     protected final void setCurrentMediaTracks(List<MediaTrack> mediaTracks) {
         mMediaTrackAdapter.clear();
         if (mediaTracks != null) {
-            mMediaTrackAdapter.addAll(mediaTracks);
+            for(MediaTrack mediaTrack : mediaTracks) {
+                mMediaTrackAdapter.add(mediaTrack);
+            }
         }
         mSelectTracksButton.setEnabled(mediaTracks != null);
     }
@@ -798,6 +803,7 @@ abstract class BaseCastPlayerActivity extends ActionBarActivity
                     AppConstants.PREF_KEY_RECEIVER_APPLICATION_ID, null);
             if (mDiscoveryActive) {
                 stopDiscovery();
+                buildRouteSelector();
                 startDiscovery();
             }
         }

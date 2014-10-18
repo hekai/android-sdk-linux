@@ -16,6 +16,7 @@ import com.google.android.gms.drive.realtime.RealtimeDocument.ErrorEvent;
 import com.google.android.gms.drive.realtime.RealtimeDocument.DocumentSaveStateChangedEvent;
 import com.google.android.gms.drive.realtime.RealtimeEvent.Listener;
 
+import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -42,12 +43,17 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
     static final String COLLAB_STRING_NAME = "demo_string";
     static final String COLLAB_LIST_NAME = "demo_list";
     static final String COLLAB_MAP_NAME = "demo_map";
+    static final String CURSORS_NAME = "demo_cursors";
     private static final int MAX_EVENTS = 50;
+
+    private int mActiveFragmentId = 0;
 
     private DriveId mDriveId;
     private PagerAdapter mAdapter;
+    private ViewPager mPager;
     private RealtimeDocument mRealtimeDocument;
     private TextView mSavingTextView;
+    private TextView mBytesUsedTextView;
     private Listener<DocumentSaveStateChangedEvent> mSaveStateListener;
     private List<CollaborativeObjectEvent> mEvents = new ArrayList<>();
 
@@ -77,6 +83,27 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
             }
         });
         mSavingTextView = (TextView) findViewById(R.id.saving_text_view);
+        mBytesUsedTextView = (TextView) findViewById(R.id.bytes_used_text_view);
+    }
+
+    @Override
+    protected void onSaveInstanceState (Bundle outState){
+        super.onSaveInstanceState(outState);
+        mActiveFragmentId = mPager.getCurrentItem();
+        outState.putInt("activeFragmentId", mActiveFragmentId);
+    }
+
+    @Override
+    protected void onRestoreInstanceState (Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mActiveFragmentId = savedInstanceState.getInt("activeFragmentId");
+        FragmentManager fm = getSupportFragmentManager();
+        android.support.v4.app.FragmentTransaction ft = fm.beginTransaction();
+        List<Fragment> fragments = fm.getFragments();
+        for(Fragment fragment : fragments){
+            ft.remove(fragment);
+        }
+        ft.commit();
     }
 
     @Override
@@ -102,8 +129,7 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
                     @Override
                     public void onInitialize(Model model) {
                         CollaborativeMap root = model.getRoot();
-                        CollaborativeString string = model.createString();
-                        string.setText("Edit Me!");
+                        CollaborativeString string = model.createString("Edit Me!");
                         root.put(COLLAB_STRING_NAME, string);
 
                         CollaborativeList list = model.createList();
@@ -118,6 +144,9 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
                             map.put("Key " + i, "Value " + i);
                         }
                         root.put(COLLAB_MAP_NAME, map);
+
+                        CollaborativeMap cursors = model.createMap();
+                        root.put(CURSORS_NAME, cursors);
                     }
                 },
                 null).setResultCallback(new ResultCallback<DriveFile.RealtimeLoadResult>() {
@@ -146,7 +175,8 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
     }
 
     private void onLoaded() {
-        Model model = mRealtimeDocument.getModel();
+        final Model model = mRealtimeDocument.getModel();
+        mBytesUsedTextView.setText(Integer.toString(model.getBytesUsed()));
 
         mUndoButton.setEnabled(model.canUndo());
         mRedoButton.setEnabled(model.canRedo());
@@ -158,9 +188,9 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
             }
         });
 
-        ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        mPager = (ViewPager) findViewById(R.id.pager);
         mAdapter = new PagerAdapter(getSupportFragmentManager());
-        pager.setAdapter(mAdapter);
+        mPager.setAdapter(mAdapter);
 
         mSaveStateListener = new Listener<DocumentSaveStateChangedEvent>() {
             @Override
@@ -173,6 +203,7 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
                     mSavingTextView.setText("Saving..");
                 } else {
                     mSavingTextView.setVisibility(View.INVISIBLE);
+                    mBytesUsedTextView.setText(Integer.toString(model.getBytesUsed()));
                 }
 
             }
@@ -189,6 +220,7 @@ public class PlaygroundDocumentActivity extends BaseDriveActivity {
             }
         };
         mRealtimeDocument.getModel().getRoot().addObjectChangedListener(listener);
+        mPager.setCurrentItem(mActiveFragmentId);
     }
 
     public List<CollaborativeObjectEvent> getRecentEvents() {

@@ -21,12 +21,12 @@ import android.support.v4.app.FragmentActivity;
 public class SplitStreetViewPanoramaAndMapDemoActivity extends FragmentActivity
     implements OnMarkerDragListener, OnStreetViewPanoramaChangeListener {
 
-    private StreetViewPanorama svp;
-    private GoogleMap mMap;
-    private Marker marker;
-
     // George St, Sydney
     private static final LatLng SYDNEY = new LatLng(-33.87365, 151.20689);
+
+    private StreetViewPanorama mSvp;
+    private GoogleMap mMap;
+    private Marker mMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,15 +38,15 @@ public class SplitStreetViewPanoramaAndMapDemoActivity extends FragmentActivity
     }
 
     private void setUpStreetViewPanoramaIfNeeded(Bundle savedInstanceState) {
-        if (svp == null) {
-            svp = ((SupportStreetViewPanoramaFragment)
+        if (mSvp == null) {
+            mSvp = ((SupportStreetViewPanoramaFragment)
                 getSupportFragmentManager().findFragmentById(R.id.streetviewpanorama))
                     .getStreetViewPanorama();
-            if (svp != null) {
+            if (mSvp != null) {
                 if (savedInstanceState == null) {
-                    svp.setPosition(SYDNEY);
+                    mSvp.setPosition(SYDNEY);
                 }
-                svp.setOnStreetViewPanoramaChangeListener(this);
+                mSvp.setOnStreetViewPanoramaChangeListener(this);
             }
         }
     }
@@ -67,14 +67,14 @@ public class SplitStreetViewPanoramaAndMapDemoActivity extends FragmentActivity
     @Override
     public void onStreetViewPanoramaChange(StreetViewPanoramaLocation location) {
         if (location != null) {
-          marker.setPosition(location.position);
+          mMarker.setPosition(location.position);
         }
     }
 
     private void setUpMap() {
         mMap.setOnMarkerDragListener(this);
         // Creates a draggable marker. Long press to drag.
-        marker = mMap.addMarker(new MarkerOptions()
+        mMarker = mMap.addMarker(new MarkerOptions()
                 .position(SYDNEY)
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.pegman))
                 .draggable(true));
@@ -86,7 +86,7 @@ public class SplitStreetViewPanoramaAndMapDemoActivity extends FragmentActivity
 
     @Override
     public void onMarkerDragEnd(Marker marker) {
-        svp.setPosition(marker.getPosition(), 150);
+        mSvp.setPosition(marker.getPosition(), 150);
     }
 
     @Override

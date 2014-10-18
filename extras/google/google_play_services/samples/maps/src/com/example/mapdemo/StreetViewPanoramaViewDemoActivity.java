@@ -13,10 +13,10 @@ import android.view.ViewGroup.LayoutParams;
  */
 public class StreetViewPanoramaViewDemoActivity extends FragmentActivity {
 
-    private StreetViewPanoramaView svpView;
-
     // George St, Sydney
     private static final LatLng SYDNEY = new LatLng(-33.87365, 151.20689);
+
+    private StreetViewPanoramaView mSvpView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,34 +27,34 @@ public class StreetViewPanoramaViewDemoActivity extends FragmentActivity {
             options.position(SYDNEY);
         }
 
-        svpView = new StreetViewPanoramaView(this, options);
-        addContentView(svpView,
+        mSvpView = new StreetViewPanoramaView(this, options);
+        addContentView(mSvpView,
             new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-      svpView.onCreate(savedInstanceState);
+      mSvpView.onCreate(savedInstanceState);
     }
 
     @Override
     protected void onResume() {
-        svpView.onResume();
+        mSvpView.onResume();
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        svpView.onPause();
+        mSvpView.onPause();
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
-        svpView.onDestroy();
+        mSvpView.onDestroy();
         super.onPause();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        svpView.onSaveInstanceState(outState);
+        mSvpView.onSaveInstanceState(outState);
     }
 }

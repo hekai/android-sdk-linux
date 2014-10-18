@@ -52,6 +52,11 @@
         <sdk:name>Android TV System Images</sdk:name>
     </sdk:sys-img-site>
 
+    <sdk:sys-img-site>
+        <sdk:url>sys-img/google_apis/sys-img.xml</sdk:url>
+        <sdk:name>Google API add-on System Images</sdk:name>
+    </sdk:sys-img-site>
+
     <sdk:addon-site>
         <sdk:url>sys-img/x86/addon-x86.xml</sdk:url>
         <sdk:name>Google Inc. (x86 System Images)</sdk:name>

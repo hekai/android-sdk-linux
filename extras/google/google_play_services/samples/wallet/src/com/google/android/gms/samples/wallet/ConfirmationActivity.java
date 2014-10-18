@@ -79,7 +79,7 @@ public class ConfirmationActivity extends BikestoreFragmentActivity {
         WalletFragmentOptions walletFragmentOptions = WalletFragmentOptions.newBuilder()
                 .setEnvironment(WalletConstants.ENVIRONMENT_SANDBOX)
                 .setFragmentStyle(walletFragmentStyle)
-                .setTheme(WalletConstants.THEME_HOLO_LIGHT)
+                .setTheme(WalletConstants.THEME_LIGHT)
                 .setMode(WalletFragmentMode.SELECTION_DETAILS)
                 .build();
         mWalletFragment = SupportWalletFragment.newInstance(walletFragmentOptions);

@@ -96,7 +96,11 @@ public abstract class AbstractGetNameTask extends AsyncTask<Void, Void, Void>{
           is.close();
           return;
         } else if (sc == 401) {
-            GoogleAuthUtil.invalidateToken(mActivity, token);
+            try{
+                GoogleAuthUtil.clearToken(mActivity, token);
+            } catch (Exception e) {
+                onError("Server auth error, please try again.", e);
+            }
             onError("Server auth error, please try again.", null);
             Log.i(TAG, "Server auth error: " + readResponse(con.getErrorStream()));
             return;

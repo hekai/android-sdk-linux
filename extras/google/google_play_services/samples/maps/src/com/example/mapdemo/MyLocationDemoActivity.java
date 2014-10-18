@@ -17,11 +17,12 @@
 package com.example.mapdemo;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
-import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
-import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -37,7 +38,7 @@ import android.widget.Toast;
  * This demo shows how GMS Location can be used to check for changes to the users location.  The
  * "My Location" button uses GMS Location to set the blue dot representing the users location. To
  * track changes to the users location on the map, we request updates from the
- * {@link LocationClient}.
+ * {@link com.google.android.gms.location.FusedLocationProviderApi}.
  */
 public class MyLocationDemoActivity extends FragmentActivity
         implements
@@ -48,7 +49,7 @@ public class MyLocationDemoActivity extends FragmentActivity
 
     private GoogleMap mMap;
 
-    private LocationClient mLocationClient;
+    private GoogleApiClient mGoogleApiClient;
     private TextView mMessageView;
 
     // These settings are the same as the settings for the map. They will in fact give you updates
@@ -69,15 +70,15 @@ public class MyLocationDemoActivity extends FragmentActivity
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
-        setUpLocationClientIfNeeded();
-        mLocationClient.connect();
+        setUpGoogleApiClientIfNeeded();
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (mLocationClient != null) {
-            mLocationClient.disconnect();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.disconnect();
         }
     }
 
@@ -95,12 +96,13 @@ public class MyLocationDemoActivity extends FragmentActivity
         }
     }
 
-    private void setUpLocationClientIfNeeded() {
-        if (mLocationClient == null) {
-            mLocationClient = new LocationClient(
-                    getApplicationContext(),
-                    this,  // ConnectionCallbacks
-                    this); // OnConnectionFailedListener
+    private void setUpGoogleApiClientIfNeeded() {
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
         }
     }
 
@@ -109,8 +111,9 @@ public class MyLocationDemoActivity extends FragmentActivity
      * without needing to register a LocationListener.
      */
     public void showMyLocation(View view) {
-        if (mLocationClient != null && mLocationClient.isConnected()) {
-            String msg = "Location = " + mLocationClient.getLastLocation();
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            String msg = "Location = "
+                    + LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
         }
     }
@@ -128,7 +131,8 @@ public class MyLocationDemoActivity extends FragmentActivity
      */
     @Override
     public void onConnected(Bundle connectionHint) {
-        mLocationClient.requestLocationUpdates(
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient,
                 REQUEST,
                 this);  // LocationListener
     }
@@ -137,7 +141,7 @@ public class MyLocationDemoActivity extends FragmentActivity
      * Callback called when disconnected from GCore. Implementation of {@link ConnectionCallbacks}.
      */
     @Override
-    public void onDisconnected() {
+    public void onConnectionSuspended(int cause) {
         // Do nothing
     }
 

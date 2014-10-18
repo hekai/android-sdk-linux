@@ -17,9 +17,12 @@ package com.google.android.gms.samples.plus;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.plus.PlusClient;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -36,8 +39,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 public class SignInActivity extends Activity implements OnClickListener,
-        PlusClient.ConnectionCallbacks, PlusClient.OnConnectionFailedListener,
-        PlusClient.OnAccessRevokedListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final int DIALOG_GET_GOOGLE_PLAY_SERVICES = 1;
 
@@ -45,7 +47,7 @@ public class SignInActivity extends Activity implements OnClickListener,
     private static final int REQUEST_CODE_GET_GOOGLE_PLAY_SERVICES = 2;
 
     private TextView mSignInStatus;
-    private PlusClient mPlusClient;
+    private GoogleApiClient mGoogleApiClient;
     private SignInButton mSignInButton;
     private View mSignOutButton;
     private View mRevokeAccessButton;
@@ -56,9 +58,12 @@ public class SignInActivity extends Activity implements OnClickListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sign_in_activity);
 
-        mPlusClient = new PlusClient.Builder(this, this, this)
-                .setActions(MomentUtil.ACTIONS)
-                .setScopes(Scopes.PLUS_LOGIN)
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Plus.API, Plus.PlusOptions.builder()
+                        .addActivityTypes(MomentUtil.ACTIONS).build())
+                .addScope(Plus.SCOPE_PLUS_LOGIN)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
                 .build();
 
         mSignInStatus = (TextView) findViewById(R.id.sign_in_status);
@@ -73,20 +78,24 @@ public class SignInActivity extends Activity implements OnClickListener,
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 if (checked) {
-                    mPlusClient.disconnect();
-                    mPlusClient = new PlusClient.Builder(
-                            SignInActivity.this, SignInActivity.this, SignInActivity.this)
-                                .setScopes(Scopes.PROFILE)
-                                .build();
-                    mPlusClient.connect();
+                    mGoogleApiClient.disconnect();
+                    mGoogleApiClient = new GoogleApiClient.Builder(SignInActivity.this)
+                            .addApi(Plus.API)
+                            .addScope(Plus.SCOPE_PLUS_PROFILE)
+                            .addConnectionCallbacks(SignInActivity.this)
+                            .addOnConnectionFailedListener(SignInActivity.this)
+                            .build();
+                    mGoogleApiClient.connect();
                 } else {
-                    mPlusClient.disconnect();
-                    mPlusClient = new PlusClient.Builder(
-                            SignInActivity.this, SignInActivity.this, SignInActivity.this)
-                                .setScopes(Scopes.PLUS_LOGIN)
-                                .setActions(MomentUtil.ACTIONS)
-                                .build();
-                    mPlusClient.connect();
+                    mGoogleApiClient.disconnect();
+                    mGoogleApiClient = new GoogleApiClient.Builder(SignInActivity.this)
+                            .addApi(Plus.API, Plus.PlusOptions.builder()
+                                    .addActivityTypes(MomentUtil.ACTIONS).build())
+                            .addScope(Plus.SCOPE_PLUS_LOGIN)
+                            .addConnectionCallbacks(SignInActivity.this)
+                            .addOnConnectionFailedListener(SignInActivity.this)
+                            .build();
+                    mGoogleApiClient.connect();
                 }
             }
         });
@@ -99,12 +108,12 @@ public class SignInActivity extends Activity implements OnClickListener,
     @Override
     public void onStart() {
         super.onStart();
-        mPlusClient.connect();
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onStop() {
-        mPlusClient.disconnect();
+        mGoogleApiClient.disconnect();
         super.onStop();
     }
 
@@ -123,19 +132,32 @@ public class SignInActivity extends Activity implements OnClickListener,
                     mConnectionResult.startResolutionForResult(this, REQUEST_CODE_SIGN_IN);
                 } catch (IntentSender.SendIntentException e) {
                     // Fetch a new result to start.
-                    mPlusClient.connect();
+                    mGoogleApiClient.connect();
                 }
                 break;
             case R.id.sign_out_button:
-                if (mPlusClient.isConnected()) {
-                    mPlusClient.clearDefaultAccount();
-                    mPlusClient.disconnect();
-                    mPlusClient.connect();
+                if (mGoogleApiClient.isConnected()) {
+                    Plus.AccountApi.clearDefaultAccount(mGoogleApiClient);
+                    mGoogleApiClient.disconnect();
+                    mGoogleApiClient.connect();
                 }
                 break;
             case R.id.revoke_access_button:
-                if (mPlusClient.isConnected()) {
-                    mPlusClient.revokeAccessAndDisconnect(this);
+                if (mGoogleApiClient.isConnected()) {
+                    Plus.AccountApi.revokeAccessAndDisconnect(mGoogleApiClient).setResultCallback(
+                            new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(Status status) {
+                                    if (status.isSuccess()) {
+                                        mSignInStatus.setText(R.string.revoke_access_status);
+                                    } else {
+                                        mSignInStatus.setText(R.string.revoke_access_error_status);
+                                    }
+                                    mGoogleApiClient.disconnect();
+                                    mGoogleApiClient.connect();
+                                }
+                            }
+                    );
                     updateButtons(false /* isSignedIn */);
                 }
                 break;
@@ -166,38 +188,30 @@ public class SignInActivity extends Activity implements OnClickListener,
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_SIGN_IN
                 || requestCode == REQUEST_CODE_GET_GOOGLE_PLAY_SERVICES) {
-            if (resultCode == RESULT_OK && !mPlusClient.isConnected()
-                    && !mPlusClient.isConnecting()) {
+            if (resultCode == RESULT_CANCELED) {
+                mSignInStatus.setText(getString(R.string.signed_out_status));
+            } else if (resultCode == RESULT_OK && !mGoogleApiClient.isConnected()
+                    && !mGoogleApiClient.isConnecting()) {
                 // This time, connect should succeed.
-                mPlusClient.connect();
+                mGoogleApiClient.connect();
             }
         }
     }
 
     @Override
-    public void onAccessRevoked(ConnectionResult status) {
-        if (status.isSuccess()) {
-            mSignInStatus.setText(R.string.revoke_access_status);
-        } else {
-            mSignInStatus.setText(R.string.revoke_access_error_status);
-            mPlusClient.disconnect();
-        }
-        mPlusClient.connect();
-    }
-
-    @Override
     public void onConnected(Bundle connectionHint) {
-        String currentPersonName = mPlusClient.getCurrentPerson() != null
-                ? mPlusClient.getCurrentPerson().getDisplayName()
+        Person person = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
+        String currentPersonName = person != null
+                ? person.getDisplayName()
                 : getString(R.string.unknown_person);
         mSignInStatus.setText(getString(R.string.signed_in_status, currentPersonName));
         updateButtons(true /* isSignedIn */);
     }
 
     @Override
-    public void onDisconnected() {
+    public void onConnectionSuspended(int cause) {
         mSignInStatus.setText(R.string.loading_status);
-        mPlusClient.connect();
+        mGoogleApiClient.connect();
         updateButtons(false /* isSignedIn */);
     }
 

@@ -20,7 +20,6 @@ public class CollaborativeStringFragment extends PlaygroundFragment {
     private CollaborativeString mCollaborativeString;
     private CollaborativeStringBinding mBinding;
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle
             savedInstanceState) {

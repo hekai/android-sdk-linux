@@ -47,10 +47,13 @@ class MediaTrackAdapter extends ArrayAdapter<MediaTrack> {
             });
         }
 
+        CheckBox checkbox = (CheckBox) view.findViewById(R.id.checkbox);
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
         TextView textView = (TextView) view.findViewById(R.id.text);
 
         MediaTrack item = getItem(position);
+
+        checkbox.setChecked(mSelectedTracks.contains(item.getId()));
 
         switch (item.getType()) {
             case MediaTrack.TYPE_AUDIO:

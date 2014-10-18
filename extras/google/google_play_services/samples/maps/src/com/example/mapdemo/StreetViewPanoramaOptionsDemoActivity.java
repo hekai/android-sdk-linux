@@ -15,45 +15,55 @@ import android.widget.Toast;
  */
 public class StreetViewPanoramaOptionsDemoActivity extends FragmentActivity {
 
-    private StreetViewPanorama svp;
+    // Cole St, San Fran
+    private static final LatLng SAN_FRAN = new LatLng(37.765927, -122.449972);
+
+    private StreetViewPanorama mSvp;
 
     private CheckBox mStreetNameCheckbox;
     private CheckBox mNavigationCheckbox;
     private CheckBox mZoomCheckbox;
     private CheckBox mPanningCheckbox;
 
-    // Cole St, San Fran
-    private static final LatLng SAN_FRAN = new LatLng(37.765927, -122.449972);
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.street_view_panorama_options_demo);
 
-        setUpStreetViewPanoramaIfNeeded(savedInstanceState);
-
         mStreetNameCheckbox = (CheckBox) findViewById(R.id.streetnames);
         mNavigationCheckbox = (CheckBox) findViewById(R.id.navigation);
         mZoomCheckbox = (CheckBox) findViewById(R.id.zoom);
         mPanningCheckbox = (CheckBox) findViewById(R.id.panning);
+
+        setUpStreetViewPanoramaIfNeeded(savedInstanceState);
     }
 
-
     private void setUpStreetViewPanoramaIfNeeded(Bundle savedInstanceState) {
-        if (svp == null) {
-            svp = ((SupportStreetViewPanoramaFragment)
+        if (mSvp == null) {
+            mSvp = ((SupportStreetViewPanoramaFragment)
                 getSupportFragmentManager().findFragmentById(R.id.streetviewpanorama))
                     .getStreetViewPanorama();
-            if (svp != null) {
+            if (mSvp != null) {
                 if (savedInstanceState == null) {
-                    svp.setPosition(SAN_FRAN);
+                    mSvp.setPosition(SAN_FRAN);
                 }
             }
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mSvp != null) {
+            mSvp.setStreetNamesEnabled(mStreetNameCheckbox.isChecked());
+            mSvp.setUserNavigationEnabled(mNavigationCheckbox.isChecked());
+            mSvp.setZoomGesturesEnabled(mZoomCheckbox.isChecked());
+            mSvp.setPanningGesturesEnabled(mPanningCheckbox.isChecked());
+        }
+    }
+
     private boolean checkReady() {
-        if (svp == null) {
+        if (mSvp == null) {
             Toast.makeText(this, R.string.map_not_ready, Toast.LENGTH_SHORT).show();
             return false;
         }
@@ -64,27 +74,27 @@ public class StreetViewPanoramaOptionsDemoActivity extends FragmentActivity {
         if (!checkReady()) {
             return;
         }
-        svp.setStreetNamesEnabled(mStreetNameCheckbox.isChecked());
+        mSvp.setStreetNamesEnabled(mStreetNameCheckbox.isChecked());
     }
 
     public void onNavigationToggled(View view) {
         if (!checkReady()) {
             return;
         }
-        svp.setUserNavigationEnabled(mNavigationCheckbox.isChecked());
+        mSvp.setUserNavigationEnabled(mNavigationCheckbox.isChecked());
     }
 
     public void onZoomToggled(View view) {
         if (!checkReady()) {
             return;
         }
-        svp.setZoomGesturesEnabled(mZoomCheckbox.isChecked());
+        mSvp.setZoomGesturesEnabled(mZoomCheckbox.isChecked());
     }
 
     public void onPanningToggled(View view) {
         if (!checkReady()) {
             return;
         }
-        svp.setPanningGesturesEnabled(mPanningCheckbox.isChecked());
+        mSvp.setPanningGesturesEnabled(mPanningCheckbox.isChecked());
     }
 }

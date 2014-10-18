@@ -41,10 +41,10 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
     private static final LatLng SYDNEY = new LatLng(-33.87365, 151.20689);
 
     // Cole St, San Fran
-    private static final String SAN_FRAN = "jc-W9NSgV9pQ_66IFu0YFw";
+    private static final LatLng SAN_FRAN = new LatLng(37.769263, -122.450727);
 
-    // Bondi Beach, Bondi
-    private static final LatLng BONDI = new LatLng(-33.891614, 151.276417);
+    // Santorini, Greece
+    private static final String SANTORINI  = "WddsUw1geEoAAAQIt9RnsQ";
 
     // LatLng with no panorama
     private static final LatLng INVALID = new LatLng(-45.125783, 151.276417);
@@ -59,9 +59,9 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
 
     private static final float ZOOM_BY = 0.5f;
 
-    private StreetViewPanorama svp;
+    private StreetViewPanorama mSvp;
 
-    private SeekBar customDurationBar;
+    private SeekBar mCustomDurationBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,17 +69,17 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
         setContentView(R.layout.street_view_panorama_navigation_demo);
 
         setUpStreetViewPanoramaIfNeeded(savedInstanceState);
-        customDurationBar = (SeekBar) findViewById(R.id.duration_bar);
+        mCustomDurationBar = (SeekBar) findViewById(R.id.duration_bar);
     }
 
     private void setUpStreetViewPanoramaIfNeeded(Bundle savedInstanceState) {
-        if (svp == null) {
-            svp = ((SupportStreetViewPanoramaFragment)
+        if (mSvp == null) {
+            mSvp = ((SupportStreetViewPanoramaFragment)
                 getSupportFragmentManager().findFragmentById(R.id.streetviewpanorama))
                     .getStreetViewPanorama();
-            if (svp != null) {
+            if (mSvp != null) {
                 if (savedInstanceState == null) {
-                    svp.setPosition(SYDNEY);
+                    mSvp.setPosition(SYDNEY);
                 }
             }
         }
@@ -90,7 +90,7 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
      * all entry points that call methods on the Panorama API.
      */
     private boolean checkReady() {
-        if (svp == null) {
+        if (mSvp == null) {
             Toast.makeText(this, R.string.panorama_not_ready, Toast.LENGTH_SHORT).show();
             return false;
         }
@@ -104,7 +104,7 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
         if (!checkReady()) {
             return;
         }
-        svp.setPosition(SAN_FRAN);
+        mSvp.setPosition(SAN_FRAN, 30);
     }
 
     /**
@@ -114,17 +114,17 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
         if (!checkReady()) {
             return;
         }
-        svp.setPosition(SYDNEY);
+        mSvp.setPosition(SYDNEY);
     }
 
     /**
-     * Called when the Animate To Bondi button is clicked.
+     * Called when the Animate To Santorini button is clicked.
      */
-    public void onGoToBondi(View view) {
+    public void onGoToSantorini(View view) {
         if (!checkReady()) {
             return;
         }
-        svp.setPosition(BONDI, 500);
+        mSvp.setPosition(SANTORINI);
     }
 
     /**
@@ -134,7 +134,7 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
         if (!checkReady()) {
             return;
         }
-        svp.setPosition(INVALID);
+        mSvp.setPosition(INVALID);
     }
 
     public void onZoomIn(View view) {
@@ -142,10 +142,10 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
             return;
         }
 
-        svp.animateTo(
-            new StreetViewPanoramaCamera.Builder().zoom(svp.getPanoramaCamera().zoom + ZOOM_BY)
-            .tilt(svp.getPanoramaCamera().tilt)
-            .bearing(svp.getPanoramaCamera().bearing).build(), getDuration());
+        mSvp.animateTo(
+            new StreetViewPanoramaCamera.Builder().zoom(mSvp.getPanoramaCamera().zoom + ZOOM_BY)
+            .tilt(mSvp.getPanoramaCamera().tilt)
+            .bearing(mSvp.getPanoramaCamera().bearing).build(), getDuration());
     }
 
     public void onZoomOut(View view) {
@@ -153,10 +153,10 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
             return;
         }
 
-        svp.animateTo(
-            new StreetViewPanoramaCamera.Builder().zoom(svp.getPanoramaCamera().zoom - ZOOM_BY)
-            .tilt(svp.getPanoramaCamera().tilt)
-            .bearing(svp.getPanoramaCamera().bearing).build(), getDuration());
+        mSvp.animateTo(
+            new StreetViewPanoramaCamera.Builder().zoom(mSvp.getPanoramaCamera().zoom - ZOOM_BY)
+            .tilt(mSvp.getPanoramaCamera().tilt)
+            .bearing(mSvp.getPanoramaCamera().bearing).build(), getDuration());
     }
 
     public void onPanLeft(View view) {
@@ -164,10 +164,10 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
             return;
         }
 
-        svp.animateTo(
-            new StreetViewPanoramaCamera.Builder().zoom(svp.getPanoramaCamera().zoom)
-            .tilt(svp.getPanoramaCamera().tilt)
-            .bearing(svp.getPanoramaCamera().bearing - PAN_BY_DEG).build(), getDuration());
+        mSvp.animateTo(
+            new StreetViewPanoramaCamera.Builder().zoom(mSvp.getPanoramaCamera().zoom)
+            .tilt(mSvp.getPanoramaCamera().tilt)
+            .bearing(mSvp.getPanoramaCamera().bearing - PAN_BY_DEG).build(), getDuration());
     }
 
     public void onPanRight(View view) {
@@ -175,10 +175,10 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
             return;
         }
 
-        svp.animateTo(
-            new StreetViewPanoramaCamera.Builder().zoom(svp.getPanoramaCamera().zoom)
-            .tilt(svp.getPanoramaCamera().tilt)
-            .bearing(svp.getPanoramaCamera().bearing + PAN_BY_DEG).build(), getDuration());
+        mSvp.animateTo(
+            new StreetViewPanoramaCamera.Builder().zoom(mSvp.getPanoramaCamera().zoom)
+            .tilt(mSvp.getPanoramaCamera().tilt)
+            .bearing(mSvp.getPanoramaCamera().bearing + PAN_BY_DEG).build(), getDuration());
 
     }
 
@@ -187,15 +187,15 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
             return;
         }
 
-        float currentTilt = svp.getPanoramaCamera().tilt;
+        float currentTilt = mSvp.getPanoramaCamera().tilt;
         float newTilt = currentTilt + PAN_BY_DEG;
 
         newTilt = (newTilt > 90) ? 90 : newTilt;
 
-        svp.animateTo(
-            new StreetViewPanoramaCamera.Builder().zoom(svp.getPanoramaCamera().zoom)
+        mSvp.animateTo(
+            new StreetViewPanoramaCamera.Builder().zoom(mSvp.getPanoramaCamera().zoom)
             .tilt(newTilt)
-            .bearing(svp.getPanoramaCamera().bearing).build(), getDuration());
+            .bearing(mSvp.getPanoramaCamera().bearing).build(), getDuration());
     }
 
     public void onPanDown(View view) {
@@ -203,33 +203,33 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
             return;
         }
 
-        float currentTilt = svp.getPanoramaCamera().tilt;
+        float currentTilt = mSvp.getPanoramaCamera().tilt;
         float newTilt = currentTilt - PAN_BY_DEG;
 
         newTilt = (newTilt < -90) ? -90 : newTilt;
 
-        svp.animateTo(
-            new StreetViewPanoramaCamera.Builder().zoom(svp.getPanoramaCamera().zoom)
+        mSvp.animateTo(
+            new StreetViewPanoramaCamera.Builder().zoom(mSvp.getPanoramaCamera().zoom)
             .tilt(newTilt)
-            .bearing(svp.getPanoramaCamera().bearing).build(), getDuration());
+            .bearing(mSvp.getPanoramaCamera().bearing).build(), getDuration());
     }
 
     public void onRequestPosition(View view) {
         if (!checkReady()){
             return;
         }
-        if (svp.getLocation() != null) {
-          Toast.makeText(view.getContext(), svp.getLocation().position.toString(),
+        if (mSvp.getLocation() != null) {
+          Toast.makeText(view.getContext(), mSvp.getLocation().position.toString(),
               Toast.LENGTH_SHORT).show();
         }
     }
 
     public void onMovePosition(View view) {
-        StreetViewPanoramaLocation location = svp.getLocation();
-        StreetViewPanoramaCamera camera = svp.getPanoramaCamera();
+        StreetViewPanoramaLocation location = mSvp.getLocation();
+        StreetViewPanoramaCamera camera = mSvp.getPanoramaCamera();
         if (location != null && location.links != null) {
             StreetViewPanoramaLink link = findClosestLinkToBearing(location.links, camera.bearing);
-            svp.setPosition(link.panoId);
+            mSvp.setPosition(link.panoId);
         }
     }
 
@@ -254,6 +254,6 @@ public class StreetViewPanoramaNavigationDemoActivity extends FragmentActivity {
     }
 
     private long getDuration() {
-        return customDurationBar.getProgress();
+        return mCustomDurationBar.getProgress();
     }
 }

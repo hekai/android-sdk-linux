@@ -5,16 +5,16 @@ package com.google.android.gms.cast.samples.democastplayer;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
-public class ModeSelectActivity extends Activity {
+public class ModeSelectActivity extends ActionBarActivity {
     private static final int REQUEST_GMS_ERROR = 0;
 
     @Override

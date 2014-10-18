@@ -435,6 +435,7 @@ public class SdkCastPlayerActivity extends BaseCastPlayerActivity {
         boolean hasAppConnection = (mAppMetadata != null) && !mWaitingForReconnect;
         boolean hasMediaConnection = (mMediaPlayer != null) && !mWaitingForReconnect;
         boolean hasMedia = false;
+        boolean seekableStream = false;
 
         if (hasMediaConnection) {
             MediaStatus mediaStatus = mMediaPlayer.getMediaStatus();
@@ -451,6 +452,10 @@ public class SdkCastPlayerActivity extends BaseCastPlayerActivity {
                 setPlayerState(playerState);
 
                 hasMedia = mediaStatus.getPlayerState() != MediaStatus.PLAYER_STATE_IDLE;
+                MediaInfo mediaInfo = mediaStatus.getMediaInfo();
+                if (mediaInfo != null) {
+                    seekableStream = mediaInfo.getStreamType() == MediaInfo.STREAM_TYPE_BUFFERED;
+                }
             }
         } else {
             setPlayerState(PLAYER_STATE_NONE);
@@ -465,7 +470,7 @@ public class SdkCastPlayerActivity extends BaseCastPlayerActivity {
 
         mSelectMediaButton.setEnabled(hasMediaConnection);
         mStopButton.setEnabled(hasMediaConnection && hasMedia);
-        setSeekBarEnabled(hasMediaConnection && hasMedia);
+        setSeekBarEnabled(hasMediaConnection && hasMedia && seekableStream);
         setDeviceVolumeControlsEnabled(hasDeviceConnection);
         setStreamVolumeControlsEnabled(hasMediaConnection && hasMedia);
     }

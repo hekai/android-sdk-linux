@@ -42,14 +42,14 @@ public class CameraDemoActivity extends FragmentActivity {
      */
     private static final int SCROLL_BY_PX = 100;
 
-    static final CameraPosition BONDI =
+    public static final CameraPosition BONDI =
             new CameraPosition.Builder().target(new LatLng(-33.891614, 151.276417))
                     .zoom(15.5f)
                     .bearing(300)
                     .tilt(50)
                     .build();
 
-    static final CameraPosition SYDNEY =
+    public static final CameraPosition SYDNEY =
             new CameraPosition.Builder().target(new LatLng(-33.87365, 151.20689))
                     .zoom(15.5f)
                     .bearing(0)

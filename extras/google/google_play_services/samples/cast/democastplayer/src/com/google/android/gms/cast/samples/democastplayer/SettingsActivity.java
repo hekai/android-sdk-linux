@@ -2,6 +2,7 @@
 
 package com.google.android.gms.cast.samples.democastplayer;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +17,10 @@ public class SettingsActivity extends PreferenceActivity {
         addPreferencesFromResource(R.xml.application_preferences);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            getActionBar().setDisplayHomeAsUpEnabled(true);
+            ActionBar actionBar = getActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
         }
     }
 
